@@ -17,16 +17,11 @@ interface SearchBarProps {
   setSearchQuery: (query: string) => void
 }
 export function SearchBar({ searchQuery, setSearchQuery }: SearchBarProps) {
-  const [localQuery, setLocalQuery] = useState(searchQuery)
-  const debouncedQuery = useDebounce(localQuery, 300)
+  const debouncedQuery = useDebounce(searchQuery, 300)
 
   useEffect(() => {
     setSearchQuery(debouncedQuery)
   }, [debouncedQuery, setSearchQuery])
-
-  useEffect(() => {
-    setLocalQuery(searchQuery)
-  }, [searchQuery])
 
   return (
     <div className="mb-8">
@@ -36,8 +31,8 @@ export function SearchBar({ searchQuery, setSearchQuery }: SearchBarProps) {
           type="search"
           placeholder="Search firms by name, location, or keywords..."
           className="pl-12 h-14 text-base bg-card border-border"
-          value={localQuery}
-          onChange={(e) => setLocalQuery(e.target.value)}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
     </div>
