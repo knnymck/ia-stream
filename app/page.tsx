@@ -5,6 +5,16 @@ import { SearchBar } from "@/components/search-bar"
 import { useState, useEffect } from "react"
 import { supabase } from "@/src/lib/supabase" // Adjusted to match src/lib/supabase.ts
 
+interface Firm {
+  id: number
+  business_name: string
+  legal_name: string
+  total_employees: number
+  // Add more fields as needed
+  part1a: any
+  state_registrations: { state_cd: string }[]
+}
+
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("")
   const [filters, setFilters] = useState({
@@ -16,7 +26,7 @@ export default function Home() {
     sectors: [],
     isFundOfFunds: false
   })
-  const [results, setResults] = useState([])
+  const [results, setResults] = useState<Firm[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null) // Fixed type: string | null
 
