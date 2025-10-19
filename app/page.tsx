@@ -41,13 +41,14 @@ export default function Home() {
       const params = new URLSearchParams({
         query: searchQuery,
         state: filters.state,
-        ...(filters.minAUM && { minAUM: filters.minAUM.toString() }),
-        ...(filters.maxAUM && { maxAUM: filters.maxAUM.toString() }),
-        ...(filters.minEmployees && { minEmployees: filters.minEmployees.toString() }),
-        ...(filters.maxEmployees && { maxEmployees: filters.maxEmployees.toString() }),
-        ...(filters.sectors.length > 0 && { sectors: filters.sectors.join(',') }),
-        ...(filters.isFundOfFunds && { isFundOfFunds: 'true' })
       })
+
+      if (filters.minAUM) params.append('minAUM', filters.minAUM.toString())
+      if (filters.maxAUM) params.append('maxAUM', filters.maxAUM.toString())
+      if (filters.minEmployees) params.append('minEmployees', filters.minEmployees.toString())
+      if (filters.maxAUM) params.append('maxAUM', filters.maxAUM.toString())
+      if (filters.sectors.length > 0) params.append('sectors', filters.sectors.join(','))
+      if (filters.isFundOfFunds) params.append('isFundOfFunds', 'true')
 
       const response = await fetch(`/api/search?${params}`)
 
