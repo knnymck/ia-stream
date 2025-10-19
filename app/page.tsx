@@ -4,7 +4,7 @@ import { SearchFilters } from "@/components/search-filters"
 import { FirmResults } from "@/components/firm-results"
 import { SearchBar } from "@/components/search-bar"
 import { useState, useEffect } from "react"
-import { supabase } from "@/src/lib/supabase"
+import { supabase } from "@/lib/supabase"
 
 interface Firm {
   id: number
@@ -13,7 +13,7 @@ interface Firm {
   total_employees: number
   part1a: any
   state_registrations: { state_cd: string; status: string }[]
-  org_state: string | null
+  org_state: string | null // For location fallback
 }
 
 export default function Home() {
@@ -32,7 +32,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    console.log('Effect triggered with query:', searchQuery, 'filters:', filters); // Debug: Confirms trigger
+    console.log('Effect triggered with query:', searchQuery, 'filters:', filters); // Debug
     const fetchFirms = async () => {
       if (!searchQuery && !filters.state && !filters.minAUM && !filters.minEmployees && filters.sectors.length === 0 && !filters.isFundOfFunds) {
         console.log('No query/filters - skipping fetch');
@@ -61,7 +61,7 @@ export default function Home() {
         queryBuilder = queryBuilder.eq('state_registrations.state_cd', filters.state.toUpperCase().slice(0, 2))
       }
 
-      // AUM filter (from part1a JSONB)
+      // AUM filter
       if (filters.minAUM) {
         queryBuilder = queryBuilder.gte('part1a->Item5F->>Q5F2C::numeric', filters.minAUM)
       }
@@ -77,7 +77,7 @@ export default function Home() {
         queryBuilder = queryBuilder.lte('total_employees', filters.maxEmployees)
       }
 
-      // Sectors (from Item5G flags)
+      // Sectors filter
       if (filters.sectors.length > 0) {
         filters.sectors.forEach(sector => {
           let sectorPath
@@ -101,14 +101,14 @@ export default function Home() {
         })
       }
 
-      // Fund of Funds (example from Item5G)
+      // Fund of Funds filter
       if (filters.isFundOfFunds) {
         queryBuilder = queryBuilder.eq('part1a->Item5G->>Q5G5', 'Y')
       }
 
       const { data, error } = await queryBuilder
 
-      console.log('Query data:', data, 'error:', error); // Debug: See response
+      console.log('Query data:', data, 'error:', error); // Debug
       if (error) {
         setError(error.message)
         console.error(error)
