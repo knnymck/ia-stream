@@ -3,7 +3,7 @@ import { SearchFilters } from "@/components/search-filters"
 import { FirmResults } from "@/components/firm-results"
 import { SearchBar } from "@/components/search-bar"
 import { useState, useEffect } from "react"
-import { supabase } from "@/src/lib/supabase" // Corrected to match src/lib/supabase.ts
+import { supabase } from "@/src/lib/supabase" // Adjusted to match src/lib/supabase.ts
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -18,7 +18,7 @@ export default function Home() {
   })
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null) // Fixed type: string | null
 
   useEffect(() => {
     const fetchFirms = async () => {
