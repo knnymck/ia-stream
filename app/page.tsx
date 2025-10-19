@@ -13,9 +13,19 @@ interface Firm {
   state_registrations: { state_cd: string; status: string }[]
 }
 
+interface Filters {
+  state: string
+  minAUM: number | null
+  maxAUM: number | null
+  minEmployees: number | null
+  maxEmployees: number | null
+  sectors: string[]
+  isFundOfFunds: boolean
+}
+
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     state: "",
     minAUM: null,
     maxAUM: null,
@@ -43,10 +53,10 @@ export default function Home() {
         state: filters.state,
       })
 
-      if (filters.minAUM) params.append('minAUM', filters.minAUM.toString())
-      if (filters.maxAUM) params.append('maxAUM', filters.maxAUM.toString())
-      if (filters.minEmployees) params.append('minEmployees', filters.minEmployees.toString())
-      if (filters.maxAUM) params.append('maxAUM', filters.maxAUM.toString())
+      if (filters.minAUM !== null) params.append('minAUM', filters.minAUM.toString())
+      if (filters.maxAUM !== null) params.append('maxAUM', filters.maxAUM.toString())
+      if (filters.minEmployees !== null) params.append('minEmployees', filters.minEmployees.toString())
+      if (filters.maxEmployees !== null) params.append('maxEmployees', filters.maxEmployees.toString())
       if (filters.sectors.length > 0) params.append('sectors', filters.sectors.join(','))
       if (filters.isFundOfFunds) params.append('isFundOfFunds', 'true')
 
