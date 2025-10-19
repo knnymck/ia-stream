@@ -1,9 +1,10 @@
 "use client"
+
 import { SearchFilters } from "@/components/search-filters"
 import { FirmResults } from "@/components/firm-results"
 import { SearchBar } from "@/components/search-bar"
 import { useState, useEffect } from "react"
-import { supabase } from "@/lib/supabase" // Adjusted to match src/lib/supabase.ts
+import { supabase } from "@/lib/supabase"
 
 interface Firm {
   id: number
@@ -12,7 +13,7 @@ interface Firm {
   total_employees: number
   part1a: any
   state_registrations: { state_cd: string; status: string }[]
-  org_state: string | null // Added to fix type error for location fallback
+  org_state: string | null
 }
 
 export default function Home() {
@@ -31,8 +32,10 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    console.log('Effect triggered with query:', searchQuery, 'filters:', filters); // Debug: Confirms trigger
     const fetchFirms = async () => {
       if (!searchQuery && !filters.state && !filters.minAUM && !filters.minEmployees && filters.sectors.length === 0 && !filters.isFundOfFunds) {
+        console.log('No query/filters - skipping fetch');
         setResults([])
         return
       }
@@ -51,14 +54,14 @@ export default function Home() {
         `)
         .ilike('business_name', `%${searchQuery}%`)
         .order('business_name', { ascending: true })
-        .limit(100) // Initial limit; implement pagination if needed
+        .limit(100)
 
-      // State filter (using inner join to filter by state_cd)
+      // State filter
       if (filters.state && filters.state !== "All States") {
-        queryBuilder = queryBuilder.eq('state_registrations.state_cd', filters.state.toUpperCase().slice(0, 2)) // e.g., 'CA' from 'California'
+        queryBuilder = queryBuilder.eq('state_registrations.state_cd', filters.state.toUpperCase().slice(0, 2))
       }
 
-      // AUM filter (adjust JSONB path to your actual AUM field, e.g., part1a->Item5F->>Q5F2C as numeric)
+      // AUM filter (from part1a JSONB)
       if (filters.minAUM) {
         queryBuilder = queryBuilder.gte('part1a->Item5F->>Q5F2C::numeric', filters.minAUM)
       }
@@ -74,7 +77,7 @@ export default function Home() {
         queryBuilder = queryBuilder.lte('total_employees', filters.maxEmployees)
       }
 
-      // Sectors filter (map to JSONB flags in Item5G; adjust mappings)
+      // Sectors (from Item5G flags)
       if (filters.sectors.length > 0) {
         filters.sectors.forEach(sector => {
           let sectorPath
@@ -98,24 +101,26 @@ export default function Home() {
         })
       }
 
-      // Fund of Funds filter (adjust to your JSONB path, e.g., Item5G->>Q5G5 = 'Y')
+      // Fund of Funds (example from Item5G)
       if (filters.isFundOfFunds) {
         queryBuilder = queryBuilder.eq('part1a->Item5G->>Q5G5', 'Y')
       }
 
       const { data, error } = await queryBuilder
 
+      console.log('Query data:', data, 'error:', error); // Debug: See response
       if (error) {
         setError(error.message)
         console.error(error)
       } else {
         setResults(data || [])
+        console.log('Set results length:', data?.length || 0)
       }
       setLoading(false)
     }
 
     fetchFirms()
-  }, [searchQuery, filters]) // Re-fetch on changes
+  }, [searchQuery, filters])
 
   return (
     <div className="min-h-screen bg-background">
@@ -138,10 +143,7 @@ export default function Home() {
             <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
             {loading && <p className="text-center text-muted-foreground">Loading results...</p>}
             {error && <p className="text-red-500 text-center">Error: {error}</p>}
-            {(searchQuery || Object.values(filters).some(v => v)) && !loading && <FirmResults results={results} searchQuery={searchQuery} />}
-            {!searchQuery && Object.values(filters).every(v => !v) && (
-              <p className="text-center text-muted-foreground mt-8">Enter a search term or apply filters to see results.</p>
-            )}
+            <FirmResults results={results} searchQuery={searchQuery} />
           </div>
         </main>
       </div>
