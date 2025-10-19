@@ -3,7 +3,7 @@ import { SearchFilters } from "@/components/search-filters"
 import { FirmResults } from "@/components/firm-results"
 import { SearchBar } from "@/components/search-bar"
 import { useState, useEffect } from "react"
-import { supabase } from "@/lib/supabase" // Corrected to match src/lib/supabase.ts
+import { supabase } from "@/src/lib/supabase" // Corrected to match src/lib/supabase.ts
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("")
