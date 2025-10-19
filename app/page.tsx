@@ -3,7 +3,6 @@ import { SearchFilters } from "@/components/search-filters"
 import { FirmResults } from "@/components/firm-results"
 import { SearchBar } from "@/components/search-bar"
 import { useState, useEffect } from "react"
-import { supabase } from "@/src/lib/supabase" // Adjusted to match src/lib/supabase.ts
 
 interface Firm {
   id: number
@@ -12,7 +11,6 @@ interface Firm {
   total_employees: number
   part1a: any
   state_registrations: { state_cd: string; status: string }[]
-  // Add other fields as needed
 }
 
 export default function Home() {
@@ -31,7 +29,6 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    console.log('Fetching with query:', searchQuery, 'filters:', filters); // Debug log
     const fetchFirms = async () => {
       if (!searchQuery && !filters.state && !filters.minAUM && !filters.minEmployees && filters.sectors.length === 0 && !filters.isFundOfFunds) {
         setResults([])
@@ -41,83 +38,34 @@ export default function Home() {
       setLoading(true)
       setError(null)
 
-      let queryBuilder = supabase
-        .from('firms')
-        .select(`
-          *,
-          state_registrations!inner (
-            state_cd,
-            status
-          )
-        `)
-        .ilike('business_name', `%${searchQuery}%`)
-        .order('business_name', { ascending: true })
-        .limit(100) // Initial limit; implement pagination if needed
+      const params = new URLSearchParams({
+        query: searchQuery,
+        state: filters.state,
+        ...(filters.minAUM && { minAUM: filters.minAUM.toString() }),
+        ...(filters.maxAUM && { maxAUM: filters.maxAUM.toString() }),
+        ...(filters.minEmployees && { minEmployees: filters.minEmployees.toString() }),
+        ...(filters.maxEmployees && { maxEmployees: filters.maxEmployees.toString() }),
+        ...(filters.sectors.length > 0 && { sectors: filters.sectors.join(',') }),
+        ...(filters.isFundOfFunds && { isFundOfFunds: 'true' })
+      })
 
-      // State filter (using inner join to filter by state_cd)
-      if (filters.state && filters.state !== "All States") {
-        queryBuilder = queryBuilder.eq('state_registrations.state_cd', filters.state.toUpperCase().slice(0, 2)) // e.g., 'CA' from 'California'
-      }
+      const response = await fetch(`/api/search?${params}`)
 
-      // AUM filter (adjust JSONB path to your actual AUM field, e.g., part1a->Item5F->>Q5F2C as numeric)
-      if (filters.minAUM) {
-        queryBuilder = queryBuilder.gte('part1a->Item5F->>Q5F2C::numeric', filters.minAUM)
-      }
-      if (filters.maxAUM) {
-        queryBuilder = queryBuilder.lte('part1a->Item5F->>Q5F2C::numeric', filters.maxAUM)
+      if (!response.ok) {
+        const err = await response.json()
+        setError(err.error || 'Failed to fetch')
+        console.error(err)
+        setLoading(false)
+        return
       }
 
-      // Employees filter
-      if (filters.minEmployees) {
-        queryBuilder = queryBuilder.gte('total_employees', filters.minEmployees)
-      }
-      if (filters.maxEmployees) {
-        queryBuilder = queryBuilder.lte('total_employees', filters.maxEmployees)
-      }
-
-      // Sectors filter (map to JSONB flags in Item5G; adjust mappings)
-      if (filters.sectors.length > 0) {
-        filters.sectors.forEach(sector => {
-          let sectorPath
-          switch (sector) {
-            case "private-equity":
-              sectorPath = 'part1a->Item5G->>Q5G1'
-              break
-            case "hedge-fund":
-              sectorPath = 'part1a->Item5G->>Q5G2'
-              break
-            case "private-credit":
-              sectorPath = 'part1a->Item5G->>Q5G3'
-              break
-            case "real-estate":
-              sectorPath = 'part1a->Item5G->>Q5G4'
-              break
-            default:
-              return
-          }
-          queryBuilder = queryBuilder.eq(sectorPath, 'Y')
-        })
-      }
-
-      // Fund of Funds filter (adjust to your JSONB path, e.g., Item5G->>Q5G5 = 'Y')
-      if (filters.isFundOfFunds) {
-        queryBuilder = queryBuilder.eq('part1a->Item5G->>Q5G5', 'Y')
-      }
-
-      const { data, error } = await queryBuilder
-
-      console.log('Query data:', data, 'error:', error); // Debug log for response
-      if (error) {
-        setError(error.message)
-        console.error(error)
-      } else {
-        setResults(data || [])
-      }
+      const { data } = await response.json()
+      setResults(data || [])
       setLoading(false)
     }
 
     fetchFirms()
-  }, [searchQuery, filters]) // Re-fetch on changes
+  }, [searchQuery, filters])
 
   return (
     <div className="min-h-screen bg-background">
