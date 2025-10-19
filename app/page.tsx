@@ -3,7 +3,17 @@ import { SearchFilters } from "@/components/search-filters"
 import { FirmResults } from "@/components/firm-results"
 import { SearchBar } from "@/components/search-bar"
 import { useState, useEffect } from "react"
-import { supabase } from "@/src/lib/supabase" // Corrected to match src/lib/supabase.ts
+import { supabase } from "@/src/lib/supabase" // Adjusted to match src/lib/supabase.ts
+
+interface Firm {
+  id: number
+  business_name: string
+  legal_name: string
+  total_employees: number
+  part1a: any
+  state_registrations: { state_cd: string; status: string }[]
+  // Add other fields as needed
+}
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -16,11 +26,12 @@ export default function Home() {
     sectors: [],
     isFundOfFunds: false
   })
-  const [results, setResults] = useState<any[]>([]) // Fixed type: any[] (or define Firm interface)
+  const [results, setResults] = useState<Firm[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    console.log('Fetching with query:', searchQuery, 'filters:', filters); // Debug log
     const fetchFirms = async () => {
       if (!searchQuery && !filters.state && !filters.minAUM && !filters.minEmployees && filters.sectors.length === 0 && !filters.isFundOfFunds) {
         setResults([])
@@ -95,6 +106,7 @@ export default function Home() {
 
       const { data, error } = await queryBuilder
 
+      console.log('Query data:', data, 'error:', error); // Debug log for response
       if (error) {
         setError(error.message)
         console.error(error)
