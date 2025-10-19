@@ -10,6 +10,7 @@ interface Firm {
   total_employees: number
   part1a: any
   state_registrations: { state_cd: string; status: string }[]
+  org_state: string | null // Added to fix type error for location fallback
 }
 
 interface FirmResultsProps {
@@ -18,8 +19,6 @@ interface FirmResultsProps {
 }
 
 export function FirmResults({ results, searchQuery }: FirmResultsProps) {
-  console.log('FirmResults rendered with results length:', results.length, 'query:', searchQuery); // Debug: Confirms new code and prop data
-
   if (results.length === 0) {
     return <div className="text-center py-12">
       <p className="text-muted-foreground">No firms found matching your search.</p>
