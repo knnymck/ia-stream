@@ -2,18 +2,25 @@
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Users, DollarSign, MapPin } from "lucide-react"
-import { useMemo } from "react"
+
+interface Firm {
+  id: number
+  business_name: string
+  legal_name: string
+  total_employees: number
+  part1a: any
+  state_registrations: { state_cd: string; status: string }[]
+}
 
 interface FirmResultsProps {
-  results: any[]
+  results: Firm[]
   searchQuery: string
 }
-export function FirmResults({ results, searchQuery }: FirmResultsProps) {
-  const filteredResults = useMemo(() => {
-    return results // Already filtered server-side; add client-side if needed
-  }, [results])
 
-  if (filteredResults.length === 0) {
+export function FirmResults({ results, searchQuery }: FirmResultsProps) {
+  console.log('FirmResults rendered with results length:', results.length, 'query:', searchQuery); // Debug: Confirms new code and prop data
+
+  if (results.length === 0) {
     return <div className="text-center py-12">
       <p className="text-muted-foreground">No firms found matching your search.</p>
     </div>
@@ -23,23 +30,22 @@ export function FirmResults({ results, searchQuery }: FirmResultsProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-muted-foreground">
-          Showing <span className="font-medium text-foreground">{filteredResults.length}</span> firms
+          Showing <span className="font-medium text-foreground">{results.length}</span> firms
         </p>
       </div>
       <div className="grid grid-cols-4 gap-4">
-        {filteredResults.map((firm) => {
-          // Extract AUM from JSONB (adjust path to your actual, e.g., part1a.Item5F.Q5F2C[0])
-          const aum = firm.part1a?.Item5F?.[0]?.Q5F2C?.[0] || 0
-          // Extract sector (based on Item5G flags; map to labels)
+        {results.map((firm) => {
+          // Extract AUM from JSONB (from schema: part1a.Item5F.Q5F2C as string/number)
+          const aum = Number(firm.part1a?.Item5F?.[0]?.Q5F2C?.[0] || 0)
+          // Extract sector from Item5G flags (adjust based on your data; e.g., Q5G1 = 'Y' for Private Equity)
           let sector = "Unknown"
           if (firm.part1a?.Item5G?.[0]?.Q5G1?.[0] === "Y") sector = "Private Equity"
           else if (firm.part1a?.Item5G?.[0]?.Q5G2?.[0] === "Y") sector = "Hedge Fund"
-          // Add more mappings
-
-          // Location from org_state or state_registrations
+          else if (firm.part1a?.Item5G?.[0]?.Q5G3?.[0] === "Y") sector = "Private Credit"
+          else if (firm.part1a?.Item5G?.[0]?.Q5G4?.[0] === "Y") sector = "Real Estate"
+          // Location from schema: state_registrations.state_cd or org_state
           const location = firm.state_registrations?.[0]?.state_cd || firm.org_state || "N/A"
-
-          // Is Fund of Funds (e.g., Q5G5 = 'Y')
+          // Is Fund of Funds (example: Q5G5 = 'Y' from schema)
           const isFundOfFunds = firm.part1a?.Item5G?.[0]?.Q5G5?.[0] === "Y"
 
           return (
@@ -71,7 +77,7 @@ export function FirmResults({ results, searchQuery }: FirmResultsProps) {
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs text-muted-foreground">AUM</p>
-                    <p className="text-sm font-medium text-card-foreground">${Number(aum).toLocaleString()}M</p>
+                    <p className="text-sm font-medium text-card-foreground">${aum.toLocaleString()}M</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
