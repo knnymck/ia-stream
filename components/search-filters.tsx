@@ -20,6 +20,7 @@ const US_STATES = [
   "New Jersey",
   "Delaware",
 ]
+
 const SECTORS = [
   { id: "private-equity", label: "Private Equity" },
   { id: "hedge-fund", label: "Hedge Fund" },
