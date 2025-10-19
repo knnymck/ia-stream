@@ -1,5 +1,4 @@
 "use client"
-
 import { useState } from "react"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -21,7 +20,6 @@ const US_STATES = [
   "New Jersey",
   "Delaware",
 ]
-
 const SECTORS = [
   { id: "private-equity", label: "Private Equity" },
   { id: "hedge-fund", label: "Hedge Fund" },
@@ -29,12 +27,19 @@ const SECTORS = [
   { id: "real-estate", label: "Real Estate" },
 ]
 
-export function SearchFilters() {
-  const [selectedSectors, setSelectedSectors] = useState<string[]>([])
-  const [isFundOfFunds, setIsFundOfFunds] = useState(false)
+interface SearchFiltersProps {
+  filters: any
+  setFilters: (filters: any) => void
+}
 
+export function SearchFilters({ filters, setFilters }: SearchFiltersProps) {
   const toggleSector = (sectorId: string) => {
-    setSelectedSectors((prev) => (prev.includes(sectorId) ? prev.filter((id) => id !== sectorId) : [...prev, sectorId]))
+    setFilters({
+      ...filters,
+      sectors: filters.sectors.includes(sectorId)
+        ? filters.sectors.filter((id: string) => id !== sectorId)
+        : [...filters.sectors, sectorId]
+    })
   }
 
   return (
@@ -44,51 +49,72 @@ export function SearchFilters() {
         <Label htmlFor="state" className="text-sm font-medium text-foreground">
           State
         </Label>
-        <Select defaultValue="all">
+        <Select
+          value={filters.state}
+          onValueChange={(value) => setFilters({ ...filters, state: value })}
+        >
           <SelectTrigger id="state" className="bg-background border-border">
             <SelectValue placeholder="Select state" />
           </SelectTrigger>
           <SelectContent>
             {US_STATES.map((state) => (
-              <SelectItem key={state} value={state.toLowerCase().replace(" ", "-")}>
+              <SelectItem key={state} value={state}>
                 {state}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
-
       <Separator className="bg-border" />
-
       {/* Assets Under Management */}
       <div className="space-y-3">
         <Label className="text-sm font-medium text-foreground">Assets Under Management</Label>
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <Input type="number" placeholder="Min (millions)" className="bg-background border-border" />
+            <Input 
+              type="number" 
+              placeholder="Min (millions)" 
+              className="bg-background border-border"
+              value={filters.minAUM || ""}
+              onChange={(e) => setFilters({ ...filters, minAUM: e.target.value ? Number(e.target.value) : null })}
+            />
             <span className="text-muted-foreground">—</span>
-            <Input type="number" placeholder="Max (millions)" className="bg-background border-border" />
+            <Input 
+              type="number" 
+              placeholder="Max (millions)" 
+              className="bg-background border-border"
+              value={filters.maxAUM || ""}
+              onChange={(e) => setFilters({ ...filters, maxAUM: e.target.value ? Number(e.target.value) : null })}
+            />
           </div>
           <p className="text-xs text-muted-foreground">Amount in USD millions</p>
         </div>
       </div>
-
       <Separator className="bg-border" />
-
       {/* Number of Employees */}
       <div className="space-y-3">
         <Label className="text-sm font-medium text-foreground">Number of Employees</Label>
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <Input type="number" placeholder="Min" className="bg-background border-border" />
+            <Input 
+              type="number" 
+              placeholder="Min" 
+              className="bg-background border-border"
+              value={filters.minEmployees || ""}
+              onChange={(e) => setFilters({ ...filters, minEmployees: e.target.value ? Number(e.target.value) : null })}
+            />
             <span className="text-muted-foreground">—</span>
-            <Input type="number" placeholder="Max" className="bg-background border-border" />
+            <Input 
+              type="number" 
+              placeholder="Max" 
+              className="bg-background border-border"
+              value={filters.maxEmployees || ""}
+              onChange={(e) => setFilters({ ...filters, maxEmployees: e.target.value ? Number(e.target.value) : null })}
+            />
           </div>
         </div>
       </div>
-
       <Separator className="bg-border" />
-
       {/* Sector Filter */}
       <div className="space-y-3">
         <Label className="text-sm font-medium text-foreground">Sector</Label>
@@ -97,7 +123,7 @@ export function SearchFilters() {
             <div key={sector.id} className="flex items-center space-x-2">
               <Checkbox
                 id={sector.id}
-                checked={selectedSectors.includes(sector.id)}
+                checked={filters.sectors.includes(sector.id)}
                 onCheckedChange={() => toggleSector(sector.id)}
               />
               <label
@@ -110,9 +136,7 @@ export function SearchFilters() {
           ))}
         </div>
       </div>
-
       <Separator className="bg-border" />
-
       {/* Fund of Funds */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -122,7 +146,11 @@ export function SearchFilters() {
             </Label>
             <p className="text-xs text-muted-foreground">Show only fund of funds</p>
           </div>
-          <Switch id="fund-of-funds" checked={isFundOfFunds} onCheckedChange={setIsFundOfFunds} />
+          <Switch 
+            id="fund-of-funds" 
+            checked={filters.isFundOfFunds} 
+            onCheckedChange={(checked) => setFilters({ ...filters, isFundOfFunds: checked })} 
+          />
         </div>
       </div>
     </div>
