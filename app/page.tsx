@@ -3,17 +3,7 @@ import { SearchFilters } from "@/components/search-filters"
 import { FirmResults } from "@/components/firm-results"
 import { SearchBar } from "@/components/search-bar"
 import { useState, useEffect } from "react"
-import { supabase } from "@/src/lib/supabase" // Adjusted to match src/lib/supabase.ts
-
-interface Firm {
-  id: number
-  business_name: string
-  legal_name: string
-  total_employees: number
-  // Add more fields as needed
-  part1a: any
-  state_registrations: { state_cd: string }[]
-}
+import { supabase } from "@/lib/supabase" // Corrected to match src/lib/supabase.ts
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -26,9 +16,9 @@ export default function Home() {
     sectors: [],
     isFundOfFunds: false
   })
-  const [results, setResults] = useState<Firm[]>([])
+  const [results, setResults] = useState<any[]>([]) // Fixed type: any[] (or define Firm interface)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null) // Fixed type: string | null
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchFirms = async () => {
